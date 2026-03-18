@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Message</title> 
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --primary-bg: #fff5f5;
+            --text-color: #4a4a4a;
+            --accent-color: #e28a8a;
+            --button-text: #ffffff;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 400px;
+            padding: 2rem;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+
+        .screen {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .screen.active {
+            display: block;
+            opacity: 1;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: var(--accent-color);
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        input[type="text"] {
+            width: 80%;
+            padding: 15px;
+            font-size: 1.2rem;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            background-color: #fafafa;
+            color: var(--text-color);
+            outline: none;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent-color);
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--button-text);
+            background-color: var(--accent-color);
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .heart {
+            font-size: 4rem;
+            margin: 2rem auto;
+            animation: heartbeat 1.2s infinite;
+        }
+
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            14% { transform: scale(1.3); }
+            28% { transform: scale(1); }
+            42% { transform: scale(1.3); }
+            70% { transform: scale(1); }
+        }
+
+        .reveal-text {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin: 1rem 0;
+        }
+        
+        #errorMessage {
+            color: #d9534f;
+            font-size: 0.9rem;
+            display: none;
+            margin-top: -10px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="screen1" class="screen active">
+            <h1>You have a new message!</h1>
+            <p>Please enter your unique passcode to open it.</p>
+            
+            <input type="text" id="secretCodeInput" placeholder="Enter Code" autocomplete="off">
+            <div id="errorMessage">Oops! That code didn't work. Try again.</div>
+            
+            <button id="btnNext1" disabled>Unlock Message</button>
+        </div>
+
+        <div id="screen2" class="screen">
+            <h1>Hi, <span id="displayName"></span>!</h1>
+            <p id="personalMessage"></p>
+            <button id="btnNext2">Read & Continue</button>
+        </div>
+
+        <div id="screen3" class="screen">
+            <div class="heart">❤️</div>
+            <p>Calculating your new title...</p>
+        </div>
+
+        <div id="screen4" class="screen">
+            <h1 style="color: #4a4a4a;">Congratulations!</h1>
+            <p>You are going to be a</p>
+            <div class="reveal-text" id="revealTitle"></div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // YOUR FAMILY DATA & CODES
+        // ==========================================
+        const familyData = {
+            "1908": { 
+                name: "Sammruddhi",
+                message: "Sammruddhi, you have been my constant—my sister, my friend, and my biggest well-wisher. Through all our silly fights, our loud laughs, and the quiet moments when we just needed a shoulder to cry on, you have never left my side. You've always held such a massive space in my heart. Then, last November, you took on the new role of 'Nand Bai' and absolutely rocked it. Watching you effortlessly befriend my wife and build such a beautiful, inseparable bond makes me wonder if you two have known each other for a lifetime. You have mastered every role you’ve played in my life so far, but get ready, because it's time for the ultimate upgrade...",
+                title: "Aatu"
+            },
+            "1902": { 
+                name: "Yash",
+                message: "Write your personal message for Yash here!",
+                title: "Kaka"
+            },
+            "0203": { 
+                name: "Ishika",
+                message: "Write your personal message for Ishika here!",
+                title: "Aatu"
+            },
+            "1406": { 
+                name: "Gayu",
+                message: "Write your personal message for Gayu here!",
+                title: "Aatu"
+            }
+            // You can easily add more below by copying the format!
+        };
+        // ==========================================
+        // END OF DATA SECTION
+        // ==========================================
+
+        const screen1 = document.getElementById('screen1');
+        const screen2 = document.getElementById('screen2');
+        const screen3 = document.getElementById('screen3');
+        const screen4 = document.getElementById('screen4');
+        
+        const codeInput = document.getElementById('secretCodeInput');
+        const errorMessage = document.getElementById('errorMessage');
+        const btnNext1 = document.getElementById('btnNext1');
+        const btnNext2 = document.getElementById('btnNext2');
+        
+        const displayName = document.getElementById('displayName');
+        const personalMessage = document.getElementById('personalMessage');
+        const revealTitle = document.getElementById('revealTitle');
+
+        let selectedUser = null;
+
+        codeInput.addEventListener('input', (e) => {
+            btnNext1.disabled = e.target.value.trim() === '';
+            errorMessage.style.display = 'none'; 
+        });
+
+        function showScreen(hideElement, showElement) {
+            hideElement.classList.remove('active');
+            setTimeout(() => {
+                hideElement.style.display = 'none';
+                showElement.style.display = 'block';
+                void showElement.offsetWidth;
+                showElement.classList.add('active');
+            }, 500); 
+        }
+
+        btnNext1.addEventListener('click', () => {
+            const enteredCode = codeInput.value.trim(); 
+            
+            if (familyData[enteredCode]) {
+                selectedUser = familyData[enteredCode];
+                
+                displayName.textContent = selectedUser.name;
+                personalMessage.textContent = selectedUser.message;
+                
+                showScreen(screen1, screen2);
+            } else {
+                errorMessage.style.display = 'block';
+                
+                btnNext1.style.transform = 'translateX(5px)';
+                setTimeout(() => btnNext1.style.transform = 'translateX(-5px)', 50);
+                setTimeout(() => btnNext1.style.transform = 'translateX(5px)', 100);
+                setTimeout(() => btnNext1.style.transform = 'translateX(0)', 150);
+            }
+        });
+
+        btnNext2.addEventListener('click', () => {
+            showScreen(screen2, screen3);
+            setTimeout(() => {
+                revealTitle.textContent = selectedUser.title;
+                showScreen(screen3, screen4);
+                setTimeout(() => {
+                    fireConfetti();
+                }, 500);
+            }, 3000); 
+        });
+
+        function fireConfetti() {
+            var duration = 3000;
+            var end = Date.now() + duration;
+
+            (function frame() {
+                confetti({
+                    particleCount: 5, angle: 60, spread: 55, origin: { x: 0 },
+                    colors: ['#e28a8a', '#ffffff', '#ffd700']
+                });
+                confetti({
+                    particleCount: 5, angle: 120, spread: 55, origin: { x: 1 },
+                    colors: ['#e28a8a', '#ffffff', '#ffd700']
+                });
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
+        }
+    </script>
+</body>
+</html>
